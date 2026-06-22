@@ -1,0 +1,72 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: png-agency-banking
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/png_agency_banking
+    username: bank_admin
+    password: StrongPass123!
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+#logging:
+#  level:
+#   root: INFO
+#  com.pngbank.agency: DEBUG
+# org.hibernate.SQL: WARN
+
+# Custom API key config: in application.properties, we can set API_KEYS=key1,key2,key3
+
+# Business logic config
+banking:
+  voucher:
+    expiration-hours: 48
+    token-length: 8
+  fees:
+    default-percentage: 0.015
+    platform-share: 0.6
+    agent-share: 0.35
+    tax-share: 0.05
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  file:
+    name: logs/agency-banking.log
+  level:
+    root: INFO
+    com.pngbank.agency: DEBUG # Logs your specific controllers
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

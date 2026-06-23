@@ -1,23 +1,24 @@
 import axios from "axios";
 
-// In a real app, load this from .env (e.g., import.meta.env.VITE_API_KEY)
-const API_KEY = "agent-app-dev-key-7f3a9b2c1e4d";
-
 const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/v1",
   headers: {
     "Content-Type": "application/json",
-    "X-API-KEY": API_KEY,
+    "X-API-KEY": "your-secure-secret-key",
   },
 });
 
-// Response interceptor for centralized error logging
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("API Error Response:", error.response?.data || error.message);
-    return Promise.reject(error);
+apiClient.interceptors.request.use(
+  (config) => {
+    const storedUser = localStorage.getItem("agency_user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      config.headers["X-USER-ID"] = user.id;
+      config.headers["X-USER-ROLE"] = user.role;
+    }
+    return config;
   },
+  (error) => Promise.reject(error),
 );
 
 export default apiClient;

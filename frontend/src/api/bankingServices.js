@@ -1,5 +1,57 @@
 import apiClient from "./apiClient";
 
+// --- RBAC MOCK DATABASE ---
+let mockGroupsDB = [
+  {
+    groupId: "GRP_SUPERUSER",
+    groupName: "Superuser",
+    description: "Complete platform control",
+    access: ["ALL"],
+  },
+  {
+    groupId: "GRP_ADMIN",
+    groupName: "Admin",
+    description: "System configuration",
+    access: ["MAKER", "CHECKER"],
+  },
+  {
+    groupId: "GRP_MAKER",
+    groupName: "Maker",
+    description: "Initiates transactions",
+    access: ["MAKER"],
+  },
+  {
+    groupId: "GRP_CHECKER",
+    groupName: "Checker",
+    description: "Authorizes transactions",
+    access: ["CHECKER"],
+  },
+];
+
+let mockUsersDB = [
+  {
+    userId: "SUP-00001",
+    userName: "System Admin",
+    mobile: "1234567890",
+    email: "admin@agency.com",
+    groupId: "GRP_SUPERUSER",
+  },
+  {
+    userId: "MKR-00001",
+    userName: "Jane Maker",
+    mobile: "0987654321",
+    email: "jane@agency.com",
+    groupId: "GRP_MAKER",
+  },
+  {
+    userId: "CHK-00001",
+    userName: "John Checker",
+    mobile: "1122334455",
+    email: "john@agency.com",
+    groupId: "GRP_CHECKER",
+  },
+];
+
 // --- IN-MEMORY MOCK DATABASE ---
 let mockTransactionTable = [];
 let serialCounter = 1;
@@ -39,6 +91,73 @@ let mockBicCodesDB = [
 
 export const BankingServices = {
   // ... [KEEP YOUR EXISTING PROFILE, VOUCHER, AND SYNC FUNCTIONS HERE] ...
+
+  // --- AUTHENTICATION ---
+  login: async (userId, userName) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Find user matching BOTH ID and Name (Case Insensitive)
+        const user = mockUsersDB.find(
+          (u) =>
+            u.userId.toUpperCase() === userId.toUpperCase() &&
+            u.userName.toLowerCase() === userName.toLowerCase(),
+        );
+
+        if (user) {
+          // Find their group to get the actual role name
+          const group = mockGroupsDB.find((g) => g.groupId === user.groupId);
+          resolve({
+            id: user.userId,
+            name: user.userName,
+            role: group ? group.groupName.toUpperCase() : "UNASSIGNED",
+          });
+        } else {
+          reject(new Error("Invalid User ID or User Name"));
+        }
+      }, 500);
+    });
+  },
+
+  // --- SUPERUSER: GROUP MANAGEMENT ---
+  fetchGroups: async () => {
+    return new Promise((resolve) =>
+      setTimeout(() => resolve([...mockGroupsDB]), 300),
+    );
+  },
+
+  saveGroup: async (groupData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        mockGroupsDB.push(groupData);
+        resolve({ success: true });
+      }, 300);
+    });
+  },
+
+  // --- SUPERUSER: USER MANAGEMENT ---
+  fetchUsers: async () => {
+    return new Promise((resolve) =>
+      setTimeout(() => resolve([...mockUsersDB]), 300),
+    );
+  },
+
+  createUser: async (userData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Generate Meaningful ID: First 3 letters of Group + random 5 digit number
+        const prefix = userData.groupId
+          .replace("GRP_", "")
+          .substring(0, 3)
+          .toUpperCase();
+        const randomNum = Math.floor(10000 + Math.random() * 90000);
+        const generatedId = `${prefix}-${randomNum}`;
+
+        const newUser = { ...userData, userId: generatedId };
+        mockUsersDB.push(newUser);
+        resolve(newUser);
+      }, 400);
+    });
+  },
 
   // --- PAYMENT TRANSFER TRANSACTIONS ---
   initiatePaymentTransfer: async (transferRequest) => {

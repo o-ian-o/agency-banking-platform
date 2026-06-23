@@ -1,59 +1,96 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./components/Layout";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
+import Login from "./components/Login";
+import Layout from "./components/Layout";
 import MakerDashboard from "./components/MakerDashboard";
 import CheckerDashboard from "./components/CheckerDashboard";
+import UserManagementDashboard from "./components/UserManagementDashboard";
+import GroupMasterDashboard from "./components/GroupMasterDashboard";
+import VoucherDashboard from "./components/VoucherDashboard"; // Assuming you have this
 
-import VoucherDashboard from "./components/VoucherDashboard";
-import StatementDashboard from "./components/StatementDashboard";
-import CommissionDashboard from "./components/CommissionDashboard";
-import ProfileDashboard from "./components/ProfileDashboard";
-import SyncDashboard from "./components/SyncDashboard";
+const SmartRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === "SUPERUSER") return <Navigate to="/admin/users" replace />;
+  if (user?.role === "CHECKER")
+    return <Navigate to="/transfers/checker" replace />;
+  return <Navigate to="/transfers/maker" replace />;
+};
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <Layout>
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
-          {/* Default Route: Redirects the root URL to the Vouchers module */}
-          <Route path="/" element={<Navigate to="/vouchers" replace />} />
+          {/* Public Login */}
+          <Route path="/login" element={<Login />} />
 
-          <Route path="/transfers/maker" element={<MakerDashboard />} />
-          <Route path="/transfers/checker" element={<CheckerDashboard />} />
-
-          {/* Exhaustive API Routes */}
-
-          <Route path="/vouchers" element={<VoucherDashboard />} />
-          <Route path="/statements" element={<StatementDashboard />} />
-          <Route path="/commissions" element={<CommissionDashboard />} />
-          <Route path="/profile" element={<ProfileDashboard />} />
-          <Route path="/sync" element={<SyncDashboard />} />
-
-          {/* Fallback 404 Route for unmatched URLs */}
+          {/* Root Redirect */}
           <Route
-            path="*"
+            path="/"
             element={
-              <div className="flex flex-col items-center justify-center h-full text-slate-500 space-y-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-2xl font-bold">
-                  !
-                </div>
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-slate-700">
-                    404 - Module Not Found
-                  </h2>
-                  <p className="mt-2">
-                    The requested operational module does not exist.
-                  </p>
-                  <p>Please select a valid option from the sidebar menu.</p>
-                </div>
-              </div>
+              <ProtectedRoute>
+                <SmartRedirect />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* RBAC Routes */}
+          <Route
+            path="/transfers/maker"
+            element={
+              <ProtectedRoute allowedRoles={["MAKER", "SUPERUSER"]}>
+                <Layout>
+                  <MakerDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transfers/checker"
+            element={
+              <ProtectedRoute allowedRoles={["CHECKER", "SUPERUSER"]}>
+                <Layout>
+                  <CheckerDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["SUPERUSER"]}>
+                <Layout>
+                  <UserManagementDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/groups"
+            element={
+              <ProtectedRoute allowedRoles={["SUPERUSER"]}>
+                <Layout>
+                  <GroupMasterDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/vouchers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VoucherDashboard />
+                </Layout>
+              </ProtectedRoute>
             }
           />
         </Routes>
-      </Layout>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
-
-export default App;

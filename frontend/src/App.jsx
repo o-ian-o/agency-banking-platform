@@ -10,6 +10,7 @@ import CheckerDashboard from "./components/CheckerDashboard";
 import UserManagementDashboard from "./components/UserManagementDashboard";
 import GroupMasterDashboard from "./components/GroupMasterDashboard";
 import VoucherDashboard from "./components/VoucherDashboard"; // Assuming you have this
+import SystemMasterDashboard from "./components/SystemMasterDashboard";
 
 const SmartRedirect = () => {
   const { user } = useAuth();
@@ -74,6 +75,17 @@ export default function App() {
               <ProtectedRoute allowedRoles={["SUPERUSER"]}>
                 <Layout>
                   <GroupMasterDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/masters"
+            element={
+              <ProtectedRoute allowedRoles={["SUPERUSER"]}>
+                <Layout>
+                  <SystemMasterDashboard />
                 </Layout>
               </ProtectedRoute>
             }

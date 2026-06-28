@@ -1,0 +1,20 @@
+CREATE TABLE payment_transfers (
+    payment_serial_no VARCHAR(20) PRIMARY KEY,
+    status VARCHAR(30) NOT NULL,
+    transfer_date VARCHAR(20),
+    payment_type VARCHAR(20),
+    out_in VARCHAR(10),
+    payment_currency VARCHAR(5),
+    payment_amount NUMERIC(15,2),
+    from_account VARCHAR(50),
+    beneficiary_bic VARCHAR(20),
+    beneficiary_account VARCHAR(50),
+    beneficiary_name VARCHAR(100),
+    beneficiary_address VARCHAR(255),
+    payment_remarks VARCHAR(255),
+    maker_id VARCHAR(50),
+    maker_date VARCHAR(30),
+    checker_id VARCHAR(50),
+    checker_date VARCHAR(30),
+    checker_remarks VARCHAR(255)
+);

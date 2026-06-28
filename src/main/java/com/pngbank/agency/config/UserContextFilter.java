@@ -15,20 +15,17 @@ import java.util.Collections;
 
 @Component
 public class UserContextFilter extends OncePerRequestFilter {
-
-    // Inject your UserRepository here later to fetch the real role from the DB
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String userId = request.getHeader("X-USER-ID");
-        String userRole = request.getHeader("X-USER-ROLE"); // Passed from frontend for simplicity in this example
+        String userRole = request.getHeader("X-USER-ROLE");
 
-        // If the API Key passed, and we have a User ID, set up the RBAC context
-        if (userId != null && userRole != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        // FIX: We overwrite the existing API-Key authentication with the User's actual RBAC role
+        if (userId != null && userRole != null) {
             
-            // Note: In production, fetch the role from the DB using userId instead of trusting the header
             SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + userRole);
             
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

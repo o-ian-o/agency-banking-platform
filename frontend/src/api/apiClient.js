@@ -4,7 +4,8 @@ const apiClient = axios.create({
   baseURL: "http://localhost:8080/api/v1",
   headers: {
     "Content-Type": "application/json",
-    "X-API-KEY": "your-secure-secret-key",
+    // Replaced the placeholder with a valid key from your backend filter
+    "X-API-KEY": "internal-admin-key-9c8b7a6d5e4f",
   },
 });
 

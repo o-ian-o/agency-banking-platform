@@ -33,6 +33,7 @@ const CheckerDashboard = () => {
   }, []);
 
   const loadFilterData = async () => {
+    alert("Loading filter data...");
     const types = await BankingServices.fetchPaymentTypesMaster();
     setPaymentTypes(types);
   };

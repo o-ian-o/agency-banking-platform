@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
     { name: "Commissions", path: "/commissions" },
     { name: "Profile Update", path: "/profile" },
     { name: "Offline Sync", path: "/sync" },
+    { name: "System Masters", path: "/admin/masters", allowed: ["SUPERUSER"] },
   ];
 
   return (

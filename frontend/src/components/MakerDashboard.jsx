@@ -9,7 +9,11 @@ const MakerDashboard = () => {
 
   // Master Data State
   const [paymentTypes, setPaymentTypes] = useState([]);
-  const [bicCodes, setBicCodes] = useState([]);
+  const [availableBics, setAvailableBics] = useState([]);
+  const [form, setForm] = useState({
+    paymentType: "",
+    beneficiaryBic: "" /* ...other fields */,
+  });
 
   // --- TRANSACTION FORM STATE ---
   const initialForm = {
@@ -55,16 +59,43 @@ const MakerDashboard = () => {
     loadMasters();
     if (activeTab === "INQUIRY") fetchInquiries();
   }, [activeTab]);
+  useEffect(() => {
+    BankingServices.fetchPaymentTypesMaster().then(setPaymentTypes);
+  }, []);
 
   const loadMasters = async () => {
     const types = await BankingServices.fetchPaymentTypesMaster();
-    const bics = await BankingServices.fetchBicCodesMaster();
+    console.log("Fetched Payment Types:", types);
+    const bics = await BankingServices.fetchBeneficiaryBicsMaster();
+    console.log("Fetched BIC Codes:", bics);
     setPaymentTypes(types);
     setBicCodes(bics);
 
     // Auto-select first payment type if form is empty
     if (!formData.paymentType && types.length > 0) {
       setFormData((prev) => ({ ...prev, paymentType: types[0].typeCode }));
+    }
+  };
+
+  const handlePaymentTypeChange = async (e) => {
+    const selectedTypeCode = e.target.value;
+
+    // Update the form
+    setForm({ ...form, paymentType: selectedTypeCode, beneficiaryBic: "" });
+
+    // Find the corresponding ID for the selected code
+    const selectedPt = paymentTypes.find(
+      (pt) => pt.typeCode === selectedTypeCode,
+    );
+
+    if (selectedPt) {
+      // Fetch BICs tied ONLY to this Payment Type ID
+      const dependentBics = await BankingServices.fetchBeneficiaryBicsMaster(
+        selectedPt.id,
+      );
+      setAvailableBics(dependentBics);
+    } else {
+      setAvailableBics([]); // Clear if none selected
     }
   };
 
@@ -132,7 +163,7 @@ const MakerDashboard = () => {
       alert("Please select at least one associated Payment Type.");
       return;
     }
-    await BankingServices.saveBicCodeMaster({
+    await BankingServices.saveBeneficiaryBicMaster({
       ...bicMasterForm,
       bicCode: bicMasterForm.bicCode.toUpperCase(),
     });
@@ -166,9 +197,9 @@ const MakerDashboard = () => {
   );
 
   // Filter BIC codes so the user can only select a BIC that allows the currently chosen Payment Type
-  const filteredBicCodes = bicCodes.filter((bic) =>
-    bic.allowedTypes.includes(formData.paymentType),
-  );
+  // const filteredBicCodes = bicCodes.filter((bic) =>
+  //   bic.allowedTypes.includes(formData.paymentType),
+  // );
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
@@ -243,14 +274,13 @@ const MakerDashboard = () => {
                 </button>
               </div>
               <select
-                name="paymentType"
-                required
-                value={formData.paymentType}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded outline-none focus:border-fintech-600 font-mono font-medium"
+                value={form.paymentType}
+                onChange={handlePaymentTypeChange}
+                className="border p-2 w-full rounded"
               >
+                <option value="">-- Select Transfer Type --</option>
                 {paymentTypes.map((pt) => (
-                  <option key={pt.typeCode} value={pt.typeCode}>
+                  <option key={pt.id} value={pt.typeCode}>
                     {pt.typeCode}
                   </option>
                 ))}
@@ -332,16 +362,17 @@ const MakerDashboard = () => {
                 </button>
               </div>
               <select
-                name="beneficiaryBic"
-                required
-                value={formData.beneficiaryBic}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded outline-none focus:border-fintech-600 uppercase font-mono"
+                value={form.beneficiaryBic}
+                onChange={(e) =>
+                  setForm({ ...form, beneficiaryBic: e.target.value })
+                }
+                className="border p-2 w-full rounded"
+                disabled={!form.paymentType}
               >
-                <option value="">-- Select BIC --</option>
-                {filteredBicCodes.map((bic) => (
-                  <option key={bic.bicCode} value={bic.bicCode}>
-                    {bic.bicCode} - {bic.bankName}
+                <option value="">-- Select Bank BIC --</option>
+                {availableBics.map((bic) => (
+                  <option key={bic.id} value={bic.bicCode}>
+                    {bic.bankName}
                   </option>
                 ))}
               </select>
